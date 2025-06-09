@@ -1,0 +1,129 @@
+openapi: 3.0.0
+info:
+  title: Raamatute RESTful API
+  version: 1.0.0
+  description: API raamatute haldamiseks koos JWT autentimise ja rollipõhise autoriseerimisega.
+servers:
+  - url: http://localhost:3000
+paths:
+  /login:
+    post:
+      summary: Logi sisse ja saa JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Edukas autentimine
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+  /books:
+    get:
+      summary: Vaata kõiki raamatuid (ainult autentitud kasutajatele)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Raamatute loetelu
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+  /books/{id}:
+    put:
+      summary: Muuda raamatu andmeid (ainult Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '200':
+          description: Muudetud raamat
+    delete:
+      summary: Kustuta raamat (ainult Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Raamat kustutatud
+  /books/{id}/comments:
+    post:
+      summary: Lisa kommentaar raamatule (ainult User)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+      responses:
+        '200':
+          description: Kommentaar lisatud
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+        genre:
+          type: string
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              user:
+                type: string
+              text:
+                type: string
